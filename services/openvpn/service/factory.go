@@ -25,7 +25,9 @@ import (
 	"github.com/mysteriumnetwork/go-openvpn/openvpn/tls"
 	"github.com/mysteriumnetwork/node/core/location"
 	"github.com/mysteriumnetwork/node/core/node"
+	"github.com/mysteriumnetwork/node/core/policy"
 	"github.com/mysteriumnetwork/node/core/port"
+	"github.com/mysteriumnetwork/node/firewall"
 	"github.com/mysteriumnetwork/node/identity"
 	"github.com/mysteriumnetwork/node/nat"
 	"github.com/mysteriumnetwork/node/nat/mapping"
@@ -53,6 +55,8 @@ func NewManager(nodeOptions node.Options,
 	portPool port.ServicePortSupplier,
 	bus eventBus,
 	portMapper mapping.PortMapper,
+	trafficBlocker firewall.IncomingTrafficBlocker,
+	policyRepo *policy.Repository,
 ) *Manager {
 	clientMap := openvpn_session.NewClientMap(sessionMap)
 
@@ -83,6 +87,8 @@ func NewManager(nodeOptions node.Options,
 		ports:                          portPool,
 		eventListener:                  bus,
 		portMapper:                     portMapper,
+		trafficBlocker:                 trafficBlocker,
+		policyRepo:                     policyRepo,
 		location:                       location,
 	}
 }

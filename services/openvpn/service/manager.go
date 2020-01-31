@@ -25,6 +25,7 @@ import (
 	"github.com/mysteriumnetwork/go-openvpn/openvpn/tls"
 	"github.com/mysteriumnetwork/node/config"
 	"github.com/mysteriumnetwork/node/core/location"
+	"github.com/mysteriumnetwork/node/core/policy"
 	"github.com/mysteriumnetwork/node/core/port"
 	"github.com/mysteriumnetwork/node/core/shaper"
 	"github.com/mysteriumnetwork/node/dns"
@@ -83,6 +84,9 @@ type Manager struct {
 	eventListener  eventListener
 	portMapper     mapping.PortMapper
 
+	trafficBlocker firewall.IncomingTrafficBlocker
+	policyRepo     *policy.Repository
+
 	sessionConfigNegotiatorFactory SessionConfigNegotiatorFactory
 
 	vpnNetwork               net.IPNet
@@ -102,6 +106,16 @@ func (m *Manager) Serve(proposal market.ServiceProposal) (err error) {
 		IP:   net.ParseIP(m.serviceOptions.Subnet),
 		Mask: net.IPMask(net.ParseIP(m.serviceOptions.Netmask).To4()),
 	}
+
+	removeRule, err := m.startTrafficFirewall(proposal.AccessPolicies)
+	if err != nil {
+		return errors.Wrap(err, "failed to enable traffic blocking")
+	}
+	defer func() {
+		if err := removeRule(); err != nil {
+			log.Warn().Err(err).Msg("failed to disable traffic blocking")
+		}
+	}()
 
 	var dnsOK bool
 	var dnsIP net.IP
@@ -292,6 +306,43 @@ func (m *Manager) startServer(server openvpn.Process, stateChannel chan openvpn.
 
 	log.Info().Msg("OpenVPN service started successfully")
 	return nil
+}
+
+func (m *Manager) startTrafficFirewall(policies *[]market.AccessPolicy) (firewall.IncomingRuleRemove, error) {
+	removeRule := func() error {
+		return nil
+	}
+	if policies == nil {
+		return removeRule, nil
+	}
+
+	policiesRules, err := m.policyRepo.RulesForPolicies(*policies)
+	if err != nil {
+		return removeRule, errors.Wrap(err, "failed to get rules for policies")
+	}
+	if !hasDNSRules(policiesRules) {
+		return removeRule, nil
+	}
+
+	removeRule, err = m.trafficBlocker.BlockIncomingTraffic(m.vpnNetwork)
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to enable traffic blocking")
+	}
+	return removeRule, nil
+}
+
+func hasDNSRules(policiesRules []market.AccessPolicyRuleSet) bool {
+	for _, policyRules := range policiesRules {
+		for _, rule := range policyRules.Allow {
+			if rule.Type == market.AccessPolicyTypeDNSZone {
+				return true
+			}
+			if rule.Type == market.AccessPolicyTypeDNSHostname {
+				return true
+			}
+		}
+	}
+	return false
 }
 
 func (m *Manager) portMappingFailed() bool {
