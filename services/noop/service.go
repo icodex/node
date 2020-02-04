@@ -22,7 +22,6 @@ import (
 	"sync"
 
 	"github.com/mysteriumnetwork/node/core/location"
-	"github.com/mysteriumnetwork/node/identity"
 	"github.com/mysteriumnetwork/node/market"
 	"github.com/mysteriumnetwork/node/nat/traversal"
 	"github.com/mysteriumnetwork/node/session"
@@ -50,7 +49,7 @@ func (manager *Manager) ProvideConfig(sessionConfig json.RawMessage) (*session.C
 }
 
 // Serve starts service - does block
-func (manager *Manager) Serve(providerID identity.Identity) error {
+func (manager *Manager) Serve(proposal market.ServiceProposal) error {
 	manager.process.Add(1)
 	log.Info().Msg("Noop service started successfully")
 	manager.process.Wait()

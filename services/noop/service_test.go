@@ -23,14 +23,9 @@ import (
 
 	"github.com/mysteriumnetwork/node/core/location"
 	"github.com/mysteriumnetwork/node/core/service"
-	"github.com/mysteriumnetwork/node/identity"
 	"github.com/mysteriumnetwork/node/market"
 	"github.com/mysteriumnetwork/node/session/pingpong"
 	"github.com/stretchr/testify/assert"
-)
-
-var (
-	providerID = identity.FromAddress("provider-id")
 )
 
 var _ service.Service = NewManager()
@@ -66,7 +61,7 @@ func Test_Manager_ProvideConfig(t *testing.T) {
 func Test_Manager_Serve_Stop(t *testing.T) {
 	manager := NewManager()
 	go func() {
-		err := manager.Serve(providerID)
+		err := manager.Serve(market.ServiceProposal{})
 		assert.NoError(t, err)
 	}()
 

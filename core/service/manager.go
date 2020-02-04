@@ -41,7 +41,7 @@ var (
 
 // Service interface represents pluggable Mysterium service
 type Service interface {
-	Serve(providerID identity.Identity) error
+	Serve(proposal market.ServiceProposal) error
 	Stop() error
 	ProvideConfig(sessionConfig json.RawMessage) (*session.ConfigParams, error)
 }
@@ -153,7 +153,7 @@ func (manager *Manager) Start(providerID identity.Identity, serviceType string, 
 	go func() {
 		instance.setState(Running)
 
-		serveErr := service.Serve(providerID)
+		serveErr := service.Serve(proposal)
 		if serveErr != nil {
 			log.Error().Err(serveErr).Msg("Service serve failed")
 		}

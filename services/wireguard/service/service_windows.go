@@ -24,7 +24,7 @@ import (
 	"github.com/mysteriumnetwork/node/core/ip"
 	"github.com/mysteriumnetwork/node/core/port"
 	"github.com/mysteriumnetwork/node/firewall"
-	"github.com/mysteriumnetwork/node/identity"
+	"github.com/mysteriumnetwork/node/market"
 	"github.com/mysteriumnetwork/node/nat"
 	"github.com/mysteriumnetwork/node/nat/traversal"
 	wg "github.com/mysteriumnetwork/node/services/wireguard"
@@ -98,7 +98,7 @@ func (manager *Manager) ProvideConfig(publicKey json.RawMessage, traversalParams
 }
 
 // Serve starts service - does block
-func (manager *Manager) Serve(providerID identity.Identity) error {
+func (manager *Manager) Serve(proposal market.ServiceProposal) error {
 	manager.wg.Add(1)
 
 	connectionEndpoint, err := endpoint.NewConnectionEndpoint(manager.ipResolver, manager.resourceAllocator, manager.portMap, manager.options.ConnectDelay)

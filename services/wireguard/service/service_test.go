@@ -63,7 +63,7 @@ func Test_Manager_Stop(t *testing.T) {
 	manager := newManagerStub(pubIP, outIP, country)
 
 	go func() {
-		err := manager.Serve(providerID)
+		err := manager.Serve(market.ServiceProposal{})
 		assert.NoError(t, err)
 	}()
 

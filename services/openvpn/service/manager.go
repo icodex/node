@@ -29,7 +29,6 @@ import (
 	"github.com/mysteriumnetwork/node/core/shaper"
 	"github.com/mysteriumnetwork/node/dns"
 	"github.com/mysteriumnetwork/node/firewall"
-	"github.com/mysteriumnetwork/node/identity"
 	"github.com/mysteriumnetwork/node/market"
 	"github.com/mysteriumnetwork/node/nat"
 	"github.com/mysteriumnetwork/node/nat/event"
@@ -98,7 +97,7 @@ type Manager struct {
 }
 
 // Serve starts service - does block
-func (m *Manager) Serve(providerID identity.Identity) (err error) {
+func (m *Manager) Serve(proposal market.ServiceProposal) (err error) {
 	m.vpnNetwork = net.IPNet{
 		IP:   net.ParseIP(m.serviceOptions.Subnet),
 		Mask: net.IPMask(net.ParseIP(m.serviceOptions.Netmask).To4()),
@@ -125,7 +124,7 @@ func (m *Manager) Serve(providerID identity.Identity) (err error) {
 		defer releasePorts()
 	}
 
-	primitives, err := primitiveFactory(m.location.Country, providerID.Address)
+	primitives, err := primitiveFactory(m.location.Country, proposal.ProviderID)
 	if err != nil {
 		return
 	}
